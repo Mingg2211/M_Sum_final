@@ -1,3 +1,5 @@
+# coding: utf8
+
 from transformers import BertTokenizer
 import onnxruntime
 from onnxruntime import GraphOptimizationLevel, InferenceSession, SessionOptions, get_all_providers
@@ -55,18 +57,19 @@ class M_Sum():
         title = news['title']
         description = news['description']
         paras = news['paras']
+        paras = re.sub(r'\n+', '\n', paras)
         if self.lang == 'ch':
-            if '\n\n' not in paras:
+            if '\n' not in paras:
                 paras = [s.replace('\u3000',' ').strip() for s in re.split('[。！？；]', paras)]
             else:
-                paras = paras.split('\n\n')
+                paras = paras.split('\n')
         else :
-            if '\n\n' not in paras:
+            if '\n' not in paras:
                 paras = sent_tokenize(paras)
                 paras = [s.strip() for s in paras]
             else: 
-                paras = paras.split('\n\n')
-        print(len(paras))
+                paras = paras.split('\n')
+        print('Độ dài đoạn tin trước tóm tắt', len(paras))
         if len(paras)<6:
             return "\n\n".join(paras)
         else:
@@ -107,7 +110,7 @@ class M_Sum():
                 result = []
                 for index in sorted(list_index):
                     result.append(paras[index])
-                print(len(result))
+                print('Độ dài đoạn tin sau tóm tắt',len(result))
                 return '\n\n'.join(result)
             elif title.strip() != "" and description.strip() == "":
                 input_id_title = self.tokenizer(title, return_tensors="pt",max_length=256, padding='max_length', truncation=True)
@@ -136,7 +139,7 @@ class M_Sum():
                 result = []
                 for index in sorted(list_index):
                     result.append(paras[index])
-                print(len(result))
+                print('Độ dài đoạn tin sau tóm tắt',len(result))
                 return '\n\n'.join(result)
             elif title.strip() == "" and description.strip() == "":
                 n = len(paras)
@@ -161,24 +164,20 @@ class M_Sum():
                 result = []
                 for index in sorted(list_index):
                     result.append(paras[index])
-            print(len(result))
+            print('Độ dài đoạn tin sau tóm tắt',len(result))
             return '\n\n'.join(result)
 
 
-# if __name__ == '__main__':    
-#     vi_summ = M_Sum()
-#     doc = """Khi được hỏi về nguy cơ tiềm ẩn đối với khu vực phía nam của Ukraine trước cuộc tấn công quy mô lớn sắp xảy ra của Nga, Bộ trưởng Quốc phòng Ukraine Oleksii Reznikov hôm 12/2 cho biết Ukraine tìm cách ngăn Nga kiểm soát Biển Đen - vùng biển chiến lược trong chiến dịch quân sự của Nga ở Ukraine.
-
-# "Tôi thực sự không thích đưa ra dự đoán hay đánh giá ý kiến, nhưng để kiểm soát Odessa và khu vực (phía nam) nói chung, Nga phải chiếm ưu thế trên Biển Đen. Tuy nhiên, chúng tôi đã tước đi cơ hội này của họ", Bộ trưởng Reznikov nói trong một cuộc họp báo.
-
-# Odessa là thành phố đông dân thứ 3 của Ukraine và là một trung tâm du lịch, thương mại lớn nằm trên bờ Tây Bắc Biển Đen. Odessa cũng là điểm trung chuyển lớn với 3 thương cảng, đồng thời là ngã ba đường sắt lớn nhất phía Nam Ukraine, do đó Odessa có ý nghĩa quan trọng chiến lược không chỉ về thương mại mà cả quy hoạch quân sự. Odessa cũng là nơi đặt Bộ Tư lệnh Hải quân của quân đội Ukraine."""
-#     news = {'title':'a',
-#             'description':'b',
-#             'paras':doc}
-#     s1 = vi_summ.sum_main(news,0.4)
-#     print(s1)
-#     print('----------------------------------------------------------------')
-#     ###############################
+if __name__ == '__main__':    
+    ch_summ = M_Sum('ch')
+    doc = """\n　　新华社北京10月31日电　题：不断夯实经济回升的基础——10月全国各地经济社会发展观察\n　　新华社记者\n　　投资项目加快落地、文体旅消费热度攀升、中小企业信心回升……随着一系列政策组合拳加快落地实施，10月份各地加快推进经济社会发展。进入四季度，各方坚定信心，落实好经济社会发展各项重点任务，不断夯实经济回升的基础，为实现全年发展目标打下坚实基础。\n\n　　观察之一：投资项目加速落地，大项目投资带动作用明显\n　　吊车高耸挥舞长臂，工人在井架构架上忙着拼接，施工车辆往来穿梭……10月份是入冬前最后的施工窗口期。为抢抓施工黄金期，鞍钢西鞍山铁矿项目正在加快施工现场的土地平整作业。\n　　“总投资229亿元的铁矿项目建成投产后，这里将成为绿色、智能、无废、无扰动的地下铁矿山。”西鞍山铁矿项目相关负责人说，通过“手递手”方式，项目矿权办理缩短了17个月，前期开工手续办理缩短了12个月。\n　　“十一”假期刚结束，多地接连召开会议，部署四季度工作，其中，加快推动投资项目落地是重点之一。\n　　放眼全国，一批重大项目正加速落地，发挥投资项目的带动作用：辽宁省目前入库储备项目超过1.7万个，总投资超8万亿元；陕西省四季度抓紧新开工600个以上省市重点项目；2023年四季度湖北省及武汉市重大项目10月26日集中开工，武汉市开工项目227个，总投资1861.7亿元……\n　　国家统计局固定资产投资统计司司长翟善清表示，前三季度，固定资产投资规模持续扩大，制造业投资增速继续加快。下阶段，要持续巩固投资增长态势，增强投资对优化供给结构的关键作用。\n\n　　【记者观察】进入四季度，各地正把项目建设作为稳住经济基本盘的重要抓手。继续保持抓高质量项目的定力和耐力，才能持续夯实稳的根基、蓄积新的动能。\n　　观察之二：文体旅消费加速，新供给激发新活力\n　　10月24日，南京夫子庙景区的科举博物馆广场前观者如潮。2023年全国射箭锦标赛（室外）在这里进行决赛，引来很多游客驻足观看。\n　　南京市秦淮区文化和旅游局（体育局）局长姜勇美说，让赛事活动与旅游文化场景深度融合，激发体育消费新潜力和新活力，能形成非常强的引流效应，进一步带动文旅消费。\n　　10月是传统的消费旺季。今年中秋国庆期间，全国超8亿人次出游、国内旅游收入超7500亿元；文体旅融合趋势明显，上海迪士尼乐园、西安秦始皇帝陵博物院、武汉黄鹤楼等文化地标成为热门目的地。\n　　10条体育旅游精品线路、9000万元商超百货消费券——为迎接第一届全国学生（青年）运动会到来，广西推出系列文体旅商促消费活动；首届湖北省户外运动大会开幕式在恩施举办，打造高山系列赛事，同时推出优质旅游线路和目的地……各地因地制宜推动商旅文体健相互赋能，开发新业态、新供给，促进新型消费潜力加速释放。\n\n　　【记者观察】进入四季度，各地抢抓黄金周机遇，通过供需双向发力推动消费升级，激发文体旅等消费新活力，带动消费尤其是服务消费持续回暖。随着政策效应持续释放，市场供给能力不断增强，消费引擎必将更加强劲。\n　　观察之三：秋收已近尾声，秋冬种抓紧推进\n　　金秋时节，在黑龙江省嫩江市伊拉哈镇，连片种植的大豆长势喜人，大型收割机在田间来回穿梭，一个来回就能装满七八吨大豆。\n　　“去年秋整地时政府给了一系列补贴政策，今年春播时又提供了根瘤菌促进大豆生长。我这13000亩大豆长势很好，预计亩产能到400斤以上。”嫩江市伊拉哈镇幸福乡村家庭农场理事长王宇心里挺踏实。\n　　在河北省磁县讲武城镇，小麦播种正抓紧进行。伴随着机械轰鸣声，立体匀播机一次性完成旋耕、播种，将小麦种在希望的田野。\n　　磁县农业农村局副局长杜文纲说，得益于北斗自动导航驾驶系统，匀播机可进行精准播种，提高出苗整齐度，为增产打下基础。\n　　当前，各地农业农村、发展改革等部门积极抓好秋收和秋冬种重点工作。安徽等地全力保障秋粮收储，备足仓容资金，确保“有仓收粮、有钱收粮、有人收粮、有车运粮”；江苏等地着力提升机械化播种质量，组建技术力量下沉一线加强技术和服务指导；黑龙江秋收已结束，正着手秸秆还田和综合利用，提出全省秸秆综合利用率达95%以上……\n　　农业农村部最新农情调度显示，目前秋收已进入扫尾阶段，秋粮大头已丰收到手，全年粮食产量有望再创历史新高。\n\n　　【记者观察】智慧高效、忙碌有序，这是记者在秋收秋种现场采访的最大感受。随着智慧农机和先进农业技术的推广应用，农业绿色发展、高质量发展的理念在广袤田野间加快落实。政策支持、科技支撑，人们辛勤耕耘，粮食供给保障能力稳步提升，丰收增产的基础不断夯实。\n　　观察之四：新能源车市场占有率提高，需求稳步释放\n　　一台台机械臂在数字化组装线上不断舞动，依次完成冲压、焊接、总装等环节……在重庆市赛力斯凤凰智慧工厂里，平均每两分钟就有一辆新能源车生产下线。\n　　“我们有一款新车型，发布1个多月以来订单量已达7万余台，工厂正开足马力保证订单交付。”赛力斯汽车相关负责人表示。\n　　“新能源车企加大产品创新力度，消费者认可度持续提升，市场占有率持续提高。”中国汽车工业协会副秘书长陈士华说。\n　　银川市启动2023金秋5000万元惠民消费券发放活动，其中发放购车消费补贴1000万元；武汉市10月13日发放1000万元“新能源汽车消费券”……当前，新能源汽车行业正值销售旺季，地方政府制定出台发放消费券、购车补贴等一系列措施。与此同时，各大车企也不断推出新产品，汽车市场需求稳步释放。\n\n　　【记者观察】新能源汽车的发展，关键在于便捷充电，未来应持续完善公共充电设施等，着力缓解消费者“充电难、充电慢”焦虑，筑牢新能源汽车消费基础。同时还应进一步瞄准基层市场，加快推动新能源汽车下乡。\n　　观察之五：稳增长措施落地见效，中小企业信心回升\n　　“这笔资金利率低、放款快，缓解了企业资金周转压力，增强了后续发展信心。”山东博凡教育科技有限公司董事长张庆磊说，不久前收到的300万元“政府采购合同融资贷款”放款，让企业购置新一批数字化设备的资金有了着落。\n　　“我们积极为政府采购供应商和金融机构搭建沟通桥梁，帮助中小微企业缓解资金压力大、融资难融资贵等问题。”山东省济宁市任城区政府采购监管工作分管负责人孟祥真说。\n　　随着一系列稳增长措施落地生效，中小企业发展信心有所回升。中国中小企业协会数据显示，三季度中小企业发展指数为89.2，比上季度上升0.2点，高于2022年同期水平。\n　　江西举办优质中小企业产融对接会，为中小企业和金融机构搭建桥梁；重庆区域性股权市场“专精特新”专板开板，首批入板211家企业；安徽省委、省政府在合肥市召开民营企业家恳谈会……10月份，各地出台一系列政策举措持续为中小企业发展注入新动力。\n\n　　【记者观察】前三季度，中小企业运行多项关键指标回升向好。近期，我国又对多项阶段性政策作出后续安排、着力激发民间投资活力、加快解决拖欠企业账款问题……一系列举措有利于稳定广大中小企业预期，增强发展信心，进一步激发企业创新活力，夯实稳增长的微观基础。\n　　统筹：杜宇、邹伟、邱红杰、王宇、刘心惠\n\n　　执笔记者：雷敏、严赋憬、魏玉坤\n\n　　采写记者：王聿昊、高亢、王雨萧、黄兴、赵鸿宇、王君宝、白涌泉、王恒志、张昕怡\n\n　　编辑|设计：刘羊旸、张虹生、潘一景\n\n　　视频编辑：杨牧\n"""
+    news = {'title':'a',
+            'description':'b',
+            'paras':doc}
+    s1 = ch_summ.sum_main(news,0.4)
+    print(s1)
+    print('----------------------------------------------------------------')
+    ###############################
 #     en_summ = M_Sum(lang='en')
 #     doc = """
 #     Yevgeny Prigozhin, the combative boss of Russia’s Wagner private military group, relishes his role as an anti-establishment maverick, but signs are growing that the Moscow establishment now has him pinned down and gasping for breath.
